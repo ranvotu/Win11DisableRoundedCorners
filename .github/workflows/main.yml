@@ -1,47 +1,44 @@
 name: Build Win11DisableRoundedCorners
 
 on:
+  workflow_dispatch:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:   # cho phép chạy thủ công
+    branches: ["master"]
 
 jobs:
   build:
     runs-on: windows-latest
 
     steps:
-    - name: Checkout repository
+    - name: Checkout source
       uses: actions/checkout@v4
-      with:
-        submodules: recursive   # vì repo có .gitmodules
 
-    - name: Setup MSVC
-      uses: ilammy/msvc-dev-cmd@v1
-      with:
-        toolset: 14.40          # tương đương VS 2022, có thể bỏ nếu không cần chỉ định
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
 
-    - name: Restore NuGet packages (nếu có)
-      run: nuget restore Win11DisableRoundedCorners.sln
-      shell: cmd
-
-    - name: Build Release x64
+    - name: Build x86
       run: |
-        msbuild Win11DisableRoundedCorners.sln ^
-          /p:Configuration=Release ^
-          /p:Platform=x64 ^
-          /m ^
-          /v:minimal ^
-          /clp:ErrorsOnly
-      shell: cmd
+        msbuild Win11DisableRoundedCorners.sln /p:Configuration=Release /p:Platform=x86
 
-    - name: Upload artifact (executable + dll nếu cần)
+    - name: Build x64
+      run: |
+        msbuild Win11DisableRoundedCorners.sln /p:Configuration=Release /p:Platform=x64
+
+    - name: Prepare Artifact Output
+      shell: powershell
+      run: |
+        mkdir ArtifactOutput\Release\x86 -Force
+        mkdir ArtifactOutput\Release\x64 -Force
+
+        # Copy the built exe(s) if they exist
+        Copy-Item -Path ".\Win11DisableRoundedCorners\Release\x86\*.exe" -Destination "ArtifactOutput\Release\x86" -Force -ErrorAction SilentlyContinue
+        Copy-Item -Path ".\Win11DisableRoundedCorners\Release\x64\*.exe" -Destination "ArtifactOutput\Release\x64" -Force -ErrorAction SilentlyContinue
+
+        # List files for debug
+        Get-ChildItem -Path "ArtifactOutput\Release" -Recurse
+
+    - name: Upload Build Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: Win11DisableRoundedCorners-Release-x64
-        path: |
-          Win11DisableRoundedCorners/x64/Release/*.exe
-          Win11DisableRoundedCorners/x64/Release/*.dll
-          Win11DisableRoundedCorners/x64/Release/*.pdb   # optional
-        if-no-files-found: warn
+        name: Win11DisableRoundedCorners
+        path: ArtifactOutput/Release

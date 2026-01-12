@@ -19,14 +19,10 @@ jobs:
     - name: Build x64
       run: |
         msbuild Win11DisableRoundedCorners.sln /p:Configuration=Release /p:Platform=x64
-
-    - name: Prepare Artifact Output
-      shell: powershell
-      run: |
-        mkdir ArtifactOutput\Release\x64 -Force
-
-    - name: Upload Build Artifacts
+      
+    - name: Upload EXE
       uses: actions/upload-artifact@v4
       with:
-        name: Win11DisableRoundedCorners
-        path: ArtifactOutput/Release
+        name: Win11DisableRoundedCornersx64
+        path: |
+          **/Release/*.exe

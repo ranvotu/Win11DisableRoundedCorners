@@ -1,5 +1,6 @@
 #undef UNICODE
 #include <Windows.h>
+#include <stdio.h>
 #include <valinet/pdb/pdb.h>
 #include <valinet/utility/memmem.h>
 #include <valinet/utility/takeown.h>
@@ -46,7 +47,7 @@ int main(int argc, char** argv)
         szOriginalDWM,
         (_MAX_PATH) * sizeof(char)
     );
-    GetSystemDirectoryA(
+    getcwd(
         szOriginalDWM,
         MAX_PATH
     );
